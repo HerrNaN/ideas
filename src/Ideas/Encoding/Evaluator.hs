@@ -19,6 +19,7 @@ import Ideas.Common.Library
 import Ideas.Main.Logging
 import Ideas.Service.Diagnose
 import Ideas.Service.Types
+import Helper.Debug.UnsafeLogging
 
 data Evaluator a b c = Evaluator (TypedDecoder a b) (TypedEncoder a c)
 
@@ -32,7 +33,7 @@ values :: EvalResult a c -> [TypedValue (Type a)]
 values result = outputValue result : inputValues result
 
 logType :: LogRef -> EvalResult a c -> Type a b -> (b -> Record -> Record) -> IO ()
-logType logRef res tp f = 
+logType logRef res tp f =
    case concatMap (findValuesOfType tp) (values res) of
       []   -> return ()
       hd:_ -> changeLog logRef (f hd)
@@ -40,11 +41,12 @@ logType logRef res tp f =
 evalService :: LogRef -> Options a -> Evaluator a b c -> Service -> b -> IO c
 evalService logRef opts f srv b = do
    res <- eval opts f b (serviceFunction srv)
+   `catch` \_ -> error "This is the misterious error."
    logType logRef res tState addState
    logType logRef res tRule $ \rl r -> r {ruleid = showId rl}
    logType logRef res tDiagnosis $ \d r -> r {serviceinfo = show d}
    return (evalResult res)
-   
+
 eval :: Options a -> Evaluator a b c -> b -> TypedValue (Type a) -> IO (EvalResult a c)
 eval opts (Evaluator dec enc) b = rec
  where
