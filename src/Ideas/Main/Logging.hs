@@ -14,7 +14,7 @@
 -----------------------------------------------------------------------------
 --  $Id$
 
-module Ideas.Main.Logging 
+module Ideas.Main.Logging
    ( Record(..), addRequest, addState
    , LogRef, newLogRef, noLogRef, changeLog
    , logEnabled, logRecord, printLog
@@ -26,6 +26,7 @@ import Data.Time
 import Ideas.Service.Request (Request, Schema(..))
 import Ideas.Service.State
 import qualified Ideas.Service.Request as R
+import Helper.Debug.UnsafeLogging
 
 #ifdef DB
 import Data.List
@@ -38,7 +39,7 @@ type Time = UTCTime
 
 -- | The Record datatype is based on the Ideas Request Logging Schema version 2.
 data Record = Record
-   { -- request attributes  
+   { -- request attributes
      service      :: String  -- name of feedback service
    , exerciseid   :: String  -- exercise identifier
    , source       :: String  -- tool/learning environment that makes request
@@ -53,7 +54,7 @@ data Record = Record
    , taskid       :: String  -- task identifier (default: start term)
      -- meta-information
    , time         :: Time    -- date and time of request
-   , responsetime :: Diff    -- time needed for processing request 
+   , responsetime :: Diff    -- time needed for processing request
    , ipaddress    :: String  -- IP address of client
    , binary       :: String  -- name of (cgi) binary that is being executed
    , version      :: String  -- version (and revision) information
@@ -78,7 +79,7 @@ makeRecord = do
 
 -- | Add record information from the Request datatype
 addRequest :: Request -> Record -> Record
-addRequest req r = r 
+addRequest req r = r
    { service     = maybe (service r) show (R.serviceId req)
    , exerciseid  = maybe (exerciseid r) show (R.exerciseId req)
    , source      = fromMaybe (source r) (R.source req)
@@ -91,11 +92,11 @@ addRequest req r = r
 
 -- | Add record information from the state (userid, sessionid, taskid)
 addState :: State a -> Record -> Record
-addState st r = r
+addState st r = unsafeLog ("Ideas: Adding state with user: ..." ++ show (stateUser st)) (r
    { userid    = fromMaybe (userid r)    (stateUser st)
    , sessionid = fromMaybe (sessionid r) (stateSession st)
    , taskid    = fromMaybe (taskid r)    (stateStartTerm st)
-   }
+   })
 
 ---------------------------------------------------------------------
 
@@ -105,7 +106,7 @@ noLogRef :: LogRef
 noLogRef = L Nothing
 
 newLogRef :: IO LogRef
-newLogRef = do 
+newLogRef = do
    r   <- makeRecord
    ref <- newIORef r
    return (L (Just ref))
@@ -152,20 +153,20 @@ columnsInTable _  = values_v2
 
 values_v1 :: Record -> [SqlValue]
 values_v1 r =
-   let get f = toSql (f r) 
+   let get f = toSql (f r)
    in [ get service, get exerciseid, get source, get dataformat, get encoding
       , get input, get output, get ipaddress, get time, get responsetime
       ]
-      
+
 values_v2 :: Record -> [SqlValue]
 values_v2 r =
-   let get f = toSql (f r) 
+   let get f = toSql (f r)
    in [ get service, get exerciseid, get source, get script, get requestinfo
       , get dataformat, get encoding, get userid, get sessionid, get taskid
       , get time, get responsetime, get ipaddress, get binary, get version
       , get errormsg, get serviceinfo, get ruleid, get input, get output
       ]
-      
+
 logRecordWith :: IConnection c => Schema -> LogRef -> c -> IO ()
 logRecordWith schema logRef conn = do
    -- calculate duration
@@ -176,7 +177,7 @@ logRecordWith schema logRef conn = do
    insertRecord schema r {responsetime = diff} conn
    -- close the connection to the database
    disconnect conn
- `catchSql` \err -> 
+ `catchSql` \err ->
    putStrLn $ "Error in logging to database: " ++ show err
 
 insertRecord :: IConnection c => Schema -> Record -> c ->  IO ()

@@ -27,7 +27,6 @@ import Ideas.Service.DomainReasoner
 import Ideas.Main.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.Request
 import Ideas.Text.JSON
-import Helper.Debug.UnsafeLogging
 
 processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processJSON maxTime cgiBin dr logRef input = do
@@ -95,7 +94,7 @@ myHandler :: DomainReasoner -> LogRef -> Request -> RPCHandler
 myHandler dr logRef request fun json = do
    srv <- findService dr (newId fun)
    Some options <- makeOptions dr request
-   unsafeLog "Ideas: myHandler is called!" (evalService logRef options jsonEvaluator srv json)
+   evalService logRef options jsonEvaluator srv json
 
 jsonEvaluator :: Evaluator a JSON JSON
 jsonEvaluator = Evaluator jsonDecoder jsonEncoder
