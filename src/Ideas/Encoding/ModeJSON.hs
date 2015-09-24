@@ -27,6 +27,7 @@ import Ideas.Service.DomainReasoner
 import Ideas.Main.Logging (LogRef, changeLog, errormsg)
 import Ideas.Service.Request
 import Ideas.Text.JSON
+import Helper.Debug.UnsafeLogging
 
 processJSON :: Maybe Int -> Maybe String -> DomainReasoner -> LogRef -> String -> IO (Request, String, String)
 processJSON maxTime cgiBin dr logRef input = do
@@ -35,6 +36,7 @@ processJSON maxTime cgiBin dr logRef input = do
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds maxTime (myHandler dr logRef req fun arg)
    unless (responseError resp == Null) $
+      unsafeLog ("There was an error with JSON: " ++ show (responseError resp)) ()
       changeLog logRef (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
@@ -84,7 +86,7 @@ stringOption :: Monad m => String -> JSON -> (String -> a) -> m (Maybe a)
 stringOption attr json f = stringOptionM attr json Nothing (return . Just . f)
 
 stringOptionM :: Monad m => String -> JSON -> a -> (String -> m a) -> m a
-stringOptionM attr json a f = 
+stringOptionM attr json a f =
    case lookupM attr json of
       Just (String s) -> f s
       Just _  -> fail $ "Invalid value for " ++ attr ++ " (expecting string)"
