@@ -35,8 +35,8 @@ processJSON maxTime cgiBin dr logRef input = do
    req  <- jsonRequest cgiBin json
    resp <- jsonRPC json $ \fun arg ->
               maybe id timedSeconds maxTime (myHandler dr logRef req fun arg)
-   unless (responseError resp == Null) $
-      unsafeLog ("There was an error with JSON: " ++ show (responseError resp)) (changeLog logRef (\r -> r {errormsg = show (responseError resp)}))
+   --unless (responseError resp == Null) $
+    --  changeLog logRef (\r -> r {errormsg = show (responseError resp)})
    let f   = if compactOutput req then compactJSON else show
        out = addVersion (version dr) (toJSON resp)
    return (req, f out, "application/json")
