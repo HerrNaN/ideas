@@ -41,7 +41,7 @@ logType logRef res tp f =
 evalService :: LogRef -> Options a -> Evaluator a b c -> Service -> b -> IO c
 evalService logRef opts f srv b = do
    res <- eval opts f b (serviceFunction srv)
-   `catch` \_ -> error "This is the misterious error."
+    `catch` \_ -> error "This is the misterious error."
    logType logRef res tState addState
    logType logRef res tRule $ \rl r -> r {ruleid = showId rl}
    logType logRef res tDiagnosis $ \d r -> r {serviceinfo = show d}
