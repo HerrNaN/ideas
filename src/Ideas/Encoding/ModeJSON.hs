@@ -95,7 +95,7 @@ myHandler :: DomainReasoner -> LogRef -> Request -> RPCHandler
 myHandler dr logRef request fun json = do
    srv <- findService dr (newId fun)
    Some options <- makeOptions dr request
-   evalService logRef options jsonEvaluator srv json
+   unsafeLog "Ideas: myHandler is called!" (evalService logRef options jsonEvaluator srv json)
 
 jsonEvaluator :: Evaluator a JSON JSON
 jsonEvaluator = Evaluator jsonDecoder jsonEncoder
