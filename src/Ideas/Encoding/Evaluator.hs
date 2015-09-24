@@ -21,7 +21,6 @@ import Ideas.Service.Diagnose
 import Ideas.Service.Types
 import Helper.Debug.UnsafeLogging
 import System.IO.Error
-import Control.Exception
 
 data Evaluator a b c = Evaluator (TypedDecoder a b) (TypedEncoder a c)
 
