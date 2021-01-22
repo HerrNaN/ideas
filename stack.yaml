@@ -3,4 +3,7 @@ extra-package-dbs: []
 packages:
 - '.'
 extra-deps:
-resolver: lts-6.1
+- HDBC-sqlite3-2.3.3.1@sha256:5025fd94d02b9b3f0b8b8233796dd9a85a0b3dda6503c6e671e3eddbc51cb4d4,2424
+- streaming-commons-0.1.19@sha256:3a02f84578f75eac1425dca877f8d697b68d379a21970c1dad96196620404803,5262
+- wl-pprint-1.2.1@sha256:aea676cff4a062d7d912149d270e33f5bb0c01b68a9db46ff13b438141ff4b7c,734
+resolver: lts-16.31
